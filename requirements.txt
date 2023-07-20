@@ -1,0 +1,6 @@
+opencv-python
+streamlit
+streamlit-webrtc
+scipy
+av
+asyncio
