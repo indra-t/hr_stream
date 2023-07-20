@@ -7,6 +7,7 @@ import scipy.fftpack as fftpack
 
 faceCascade = cv2.CascadeClassifier("haarcascade_frontalface_alt0.xml")
 
+
 def preprocess_frames(frames):
     video_frames = []
     face_rects = ()
@@ -28,7 +29,8 @@ def preprocess_frames(frames):
                 video_frames.append(frame)
 
     frame_ct = len(video_frames)
-    fps = int(frame_ct / 5)
+    fps = int(frame_ct / 3)
+    print(frame_ct)
 
     return video_frames, frame_ct, fps
 
@@ -47,6 +49,7 @@ def fft_filter(video, freq_min, freq_max, fps):
     result *= 100  # Amplification factor
 
     return result, fft, frequencies
+
 
 def heart_rate_from_fft(fft, freqs, freq_min, freq_max):
     fft_maximums = []
@@ -70,32 +73,40 @@ def heart_rate_from_fft(fft, freqs, freq_min, freq_max):
 
     return freqs[max_peak] * 60
 
+
 def heart_rate(frames):
     freq_min = 1
-    freq_max = 1.8    
+    freq_max = 1.8
+    print(len(frames))
 
     face_frames, frame_ct, fps = preprocess_frames(frames)
     print("Building Laplacian video pyramid...")
     lap_video = pyramids.build_video_pyramid(face_frames)
 
+    heart_rate = None
+
     for i, video in enumerate(lap_video):
         if i == 0 or i == len(lap_video) - 1:
             continue
 
-        # Eulerian magnification with temporal FFT filtering
         print("Running FFT and Eulerian magnification...")
-        result, fft, frequencies = fft_filter(
-            video, freq_min, freq_max, fps
-        )
+        result, fft, frequencies = fft_filter(video, freq_min, freq_max, fps)
+        print(result)
         lap_video[i] += result
 
         # Calculate heart rate
         print("Calculating heart rate...")
         try:
             heart_rate = heart_rate_from_fft(fft, frequencies, freq_min, freq_max)
+            heart_rate = heart_rate
         except:
-            heart_rate = ""
+            heart_rate = None
 
-    print(heart_rate)
+    try:
+        print(heart_rate)
+    except:
+        pass
+
+    print(fps)
 
     return heart_rate
