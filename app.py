@@ -27,7 +27,7 @@ run = st.checkbox("Run")
 # upload_video = st.checkbox("Upload Video File")
 
 FRAME_WINDOW = st.image([])
-camera = cv2.VideoCapture(0)
+# camera = cv2.VideoCapture(0)
 heart_rates = []
 last_heart_rate_update = time.time()
 
@@ -37,6 +37,7 @@ container2 = st.empty()
 h_df = pd.DataFrame()
 i = 0
 while run:
+    camera = cv2.VideoCapture(0)
     start_time = time.time()
     frame_list = []
 
