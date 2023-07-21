@@ -20,7 +20,6 @@ fixMatplotlib = true
 folderWatchBlacklist = []
 headless = true
 runOnSave = false
-port = 3124
 enableCORS = false
 enableXsrfProtection = false
 
