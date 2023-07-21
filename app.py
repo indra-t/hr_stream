@@ -37,7 +37,7 @@ container2 = st.empty()
 h_df = pd.DataFrame()
 i = 0
 while run:
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture(-1)
     start_time = time.time()
     frame_list = []
 
