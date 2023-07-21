@@ -36,8 +36,11 @@ result_queue = queue.Queue()
 image_place = st.empty()
 
 fct = 0
-h_df = pd.DataFrame()
 i = 0
+
+heart_rate_text = 0
+h_df = pd.DataFrame([{"heart_rate": heart_rate_text, "time": i}])
+
 while True:
     start_time = time.time()
     frames = []
@@ -52,10 +55,13 @@ while True:
             except:
                 pass
         else:
-            heart_rate_text = main.heart_rate(frames)
-            # print(heart_rate_text)
-            if heart_rate_text is not None and int(heart_rate_text) > 45:
-                result_queue.put(heart_rate_text)
+            try:
+                heart_rate_text = main.heart_rate(frames)
+                # print(heart_rate_text)
+                if heart_rate_text is not None and int(heart_rate_text) > 45:
+                    result_queue.put(heart_rate_text)
+            except:
+                pass
 
             start_time = time.time()
             frames = []
