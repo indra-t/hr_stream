@@ -1,12 +1,8 @@
 
 [global]
-
-
 disableWatchdogWarning = false
 sharingMode = "off"
 showWarningOnDirectExecution = true
-
-logLevel = "debug"
 
 [client]
 
