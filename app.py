@@ -1,77 +1,79 @@
-import queue
-import threading
-import time
-import urllib.request
-from collections import deque
-from pathlib import Path
-import av
-from typing import List
-import streamlit as st
 import cv2
+from streamlit_webrtc import VideoTransformerBase, webrtc_streamer, WebRtcMode
 import main
-import asyncio
+import av
+import streamlit as st
+
+import time
+import threading
+import queue
+from typing import List
 import pandas as pd
 
-from streamlit_webrtc import (
-    RTCConfiguration,
-    VideoProcessorBase,
-    WebRtcMode,
-    webrtc_streamer,
-)
+result_queue: "queue.Queue[float]" = queue.Queue()
 
-result_deque: deque = deque([])
+st.title("Heart Rate Detection Demo")
+stream = "Live Video Stream"
+upload_video = "Uploaded Video/File"
+app_mode = st.selectbox("Choose the app mode", [stream, upload_video])
+run = st.checkbox("Run")
 
-webrtc_ctx = webrtc_streamer(
-    key="vitals-from-video",
-    mode=WebRtcMode.SENDONLY,
-    rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-    media_stream_constraints={"video": True},
-    async_processing=True,
-)
+# checks = st.columns(2)
+# with checks[0]:
+#     stream = st.checkbox("Live Stream")
+# with checks[1]:
+#     st.checkbox("Upload Video File")
 
-container1 = st.empty()
+# upload_video = st.checkbox("Upload Video File")
+
+FRAME_WINDOW = st.image([])
+camera = cv2.VideoCapture(0)
+heart_rates = []
+last_heart_rate_update = time.time()
+
+container = st.empty()
 container2 = st.empty()
 
-result_queue = queue.Queue()
-image_place = st.empty()
-
-fct = 0
+h_df = pd.DataFrame()
 i = 0
-
-heart_rate_text = 0
-h_df = pd.DataFrame([{"heart_rate": heart_rate_text, "time": i}])
-
-while True:
+while run:
     start_time = time.time()
-    frames = []
-    if webrtc_ctx.video_receiver:
-        while time.time() - start_time <= 3:
-            try:
-                frame = webrtc_ctx.video_receiver.get_frame(timeout=1)
-                image = frame.to_ndarray(format="rgb24")
-                frames.append(image)
-                image_place.image(image)
-                fct = fct + 1
-            except:
-                pass
-        else:
-            try:
-                heart_rate_text = main.heart_rate(frames)
-                # print(heart_rate_text)
-                if heart_rate_text is not None and int(heart_rate_text) > 45:
-                    result_queue.put(heart_rate_text)
-            except:
-                pass
+    frame_list = []
 
-            start_time = time.time()
-            frames = []
+    while time.time() - start_time <= 5:
+        _, frame = camera.read()
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        FRAME_WINDOW.image(image)
+        frame_list.append(image)
 
-        nh_df = pd.DataFrame([{"heart_rate": result_queue.get(), "time": i}])
-        h_df = pd.concat([h_df, nh_df], ignore_index=True)
+    heart_rate_text = main.heart_rate(frame_list)
+    try:
+        heart_rate_text = round(heart_rate_text, 2)
+    except:
+        pass
+    text_position = (image.shape[1] - 150, 30)
+    cv2.putText(
+        image,
+        str("HR: ") + str(heart_rate_text),
+        text_position,
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (0, 0, 0),
+        2,
+    )
 
-        i = i + 5
+    if heart_rate_text is not None and int(heart_rate_text) > 45:
+        if heart_rate_text not in list(result_queue.queue):
+            result_queue.put(heart_rate_text)
 
-        container1.write("Heart Rate: " + str(heart_rate_text))
-        container2.line_chart(
-            data=h_df, x="time", y="heart_rate", use_container_width=True
-        )
+    nh_df = pd.DataFrame([{"heart_rate": result_queue.get(), "time": i}])
+    h_df = pd.concat([h_df, nh_df], ignore_index=True)
+
+    # if time.time() - timer() > 3.5:
+    container.write("Heart Rate: " + str(heart_rate_text))
+    container2.line_chart(data=h_df, x="time", y="heart_rate", use_container_width=True)
+
+    # Reset the frame list and start time
+    frame_list = []
+    start_time = time.time()
+    i = i + 5
