@@ -26,7 +26,7 @@ webrtc_ctx = webrtc_streamer(
     mode=WebRtcMode.SENDONLY,
     rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
     media_stream_constraints={"video": True},
-    # async_processing=True,
+    async_processing=True,
 )
 
 container1 = st.empty()
