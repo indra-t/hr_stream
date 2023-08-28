@@ -4,3 +4,6 @@ streamlit-webrtc
 scipy
 av
 asyncio
+liteindex
+pyvhr
+biosppy
