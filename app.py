@@ -28,7 +28,7 @@ webrtc_ctx = webrtc_streamer(
     media_stream_constraints={"video": True},
     async_processing=True,
     video_receiver_size = 256,
-    player_factory = None
+    # player_factory = None
 )
 
 container1 = st.empty()
